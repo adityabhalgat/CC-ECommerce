@@ -1,4 +1,4 @@
-# Deployment Guide: React + Express + NeonDB on Amazon EC2
+# Deployment Guide: React + Express + MongoDB Atlas on Amazon EC2
 
 This guide deploys a sample e-commerce app on an Ubuntu EC2 VM.
 
@@ -7,12 +7,12 @@ This guide deploys a sample e-commerce app on an Ubuntu EC2 VM.
 - Browser -> Nginx (port 80/443)
 - Nginx serves React static build
 - Nginx proxies `/api/*` -> Express backend on `127.0.0.1:4000`
-- Express connects to Neon PostgreSQL using `DATABASE_URL`
+- Express connects to MongoDB Atlas using `MONGODB_URI`
 
 ## 2) Prerequisites
 
 - AWS account
-- Neon database project and connection string
+- MongoDB Atlas cluster and connection string
 - Domain name (optional, for HTTPS)
 - Local SSH key pair for EC2
 
@@ -72,7 +72,8 @@ Edit `/home/ubuntu/ecommerce/backend/.env` with real values:
 
 ```env
 PORT=4000
-DATABASE_URL=postgres://<user>:<password>@<host>/<dbname>?sslmode=require
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster-host>/?retryWrites=true&w=majority
+MONGODB_DB_NAME=ecommerce_db
 FRONTEND_ORIGIN=http://<EC2_PUBLIC_IP>
 ```
 
@@ -178,11 +179,11 @@ curl -X POST http://127.0.0.1:4000/api/purchases \
 - CORS error in browser:
   - Ensure `FRONTEND_ORIGIN` exactly matches frontend URL.
 - Database connection failure:
-  - Verify `DATABASE_URL` and Neon project access settings.
+  - Verify `MONGODB_URI`, `MONGODB_DB_NAME`, and Atlas network access settings.
 - Nginx 502 Bad Gateway:
   - Check backend process: `pm2 status`
   - Check backend logs: `pm2 logs ecommerce-backend`
 - React routes not loading on refresh:
   - Confirm `try_files $uri /index.html;` is present in Nginx config.
 
-Your sample e-commerce app is now deployed on EC2 with Neon PostgreSQL.
+Your sample e-commerce app is now deployed on EC2 with MongoDB Atlas.

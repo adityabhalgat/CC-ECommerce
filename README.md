@@ -1,13 +1,13 @@
-# E-Commerce Sample (React + Express + NeonDB)
+# E-Commerce Sample (React + Express + MongoDB Atlas)
 
 This project demonstrates a simple e-commerce flow:
-- Browse products from PostgreSQL (NeonDB)
-- Simulate a purchase that updates inventory transactionally
+- Browse products from MongoDB Atlas
+- Simulate a purchase that updates inventory atomically
 
 ## Tech stack
 - Frontend: React + Vite
 - Backend: Node.js + Express
-- Database: PostgreSQL (NeonDB)
+- Database: MongoDB Atlas
 
 ## Quick local run
 
@@ -15,7 +15,8 @@ This project demonstrates a simple e-commerce flow:
    - `cd backend`
    - `npm install`
    - `cp .env.example .env`
-   - Set `DATABASE_URL` in `.env`
+   - Set `MONGODB_URI` in `.env`
+   - Optionally set `MONGODB_DB_NAME` (defaults to `ecommerce_db`)
    - `npm run init-db`
    - `npm run dev`
 

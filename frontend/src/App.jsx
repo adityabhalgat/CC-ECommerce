@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import stainlessBottleImage from "./assets/stainless-bottle.svg";
 
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4000";
+// Use a relative API base by default so production proxying works.
+const apiUrl = import.meta.env.VITE_API_URL || "";
 
 const productImages = {
   1: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=80",

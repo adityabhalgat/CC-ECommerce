@@ -1,26 +1,25 @@
 import dotenv from "dotenv";
-import pg from "pg";
+import { MongoClient } from "mongodb";
 
 dotenv.config();
 
-const { Pool } = pg;
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is required. Add it to backend/.env");
+if (!process.env.MONGODB_URI) {
+  throw new Error("MONGODB_URI is required. Add it to backend/.env");
 }
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
+const dbName = process.env.MONGODB_DB_NAME || "ecommerce_db";
+const client = new MongoClient(process.env.MONGODB_URI);
 
-export async function runQuery(text, params = []) {
-  const client = await pool.connect();
-  try {
-    return await client.query(text, params);
-  } finally {
-    client.release();
+let dbRef;
+
+export async function connectDb() {
+  if (!dbRef) {
+    await client.connect();
+    dbRef = client.db(dbName);
   }
+  return dbRef;
+}
+
+export function getClient() {
+  return client;
 }

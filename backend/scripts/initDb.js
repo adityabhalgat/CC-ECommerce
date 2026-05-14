@@ -1,47 +1,34 @@
 import dotenv from "dotenv";
-import { runQuery, pool } from "../src/db.js";
+import { connectDb, getClient } from "../src/db.js";
 
 dotenv.config();
 
 async function init() {
-  await runQuery(`
-    CREATE TABLE IF NOT EXISTS products (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
-      stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0)
-    );
-  `);
+  const db = await connectDb();
+  const productsCollection = db.collection("products");
+  const purchasesCollection = db.collection("purchases");
 
-  await runQuery(`
-    CREATE TABLE IF NOT EXISTS purchases (
-      id SERIAL PRIMARY KEY,
-      product_id INTEGER NOT NULL REFERENCES products(id),
-      quantity INTEGER NOT NULL CHECK (quantity > 0),
-      total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
-      buyer_email TEXT NOT NULL,
-      created_at TIMESTAMP NOT NULL DEFAULT NOW()
-    );
-  `);
+  await productsCollection.createIndex({ id: 1 }, { unique: true });
+  await productsCollection.createIndex({ name: 1 }, { unique: true });
+  await purchasesCollection.createIndex({ id: 1 }, { unique: true });
+  await purchasesCollection.createIndex({ product_id: 1, created_at: -1 });
 
   const seedProducts = [
-    ["Classic White Tee", "100% cotton minimal everyday t-shirt.", 1999, 25],
-    ["Urban Backpack", "Water-resistant backpack for daily commute.", 4599, 12],
-    ["Wireless Earbuds", "Compact audio companion with charging case.", 6999, 18],
-    ["Stainless Bottle", "750ml insulated bottle for hot and cold drinks.", 2499, 30]
+    { id: 1, name: "Classic White Tee", description: "100% cotton minimal everyday t-shirt.", price_cents: 1999, stock: 25 },
+    { id: 2, name: "Urban Backpack", description: "Water-resistant backpack for daily commute.", price_cents: 4599, stock: 12 },
+    { id: 3, name: "Wireless Earbuds", description: "Compact audio companion with charging case.", price_cents: 6999, stock: 18 },
+    { id: 4, name: "Stainless Bottle", description: "750ml insulated bottle for hot and cold drinks.", price_cents: 2499, stock: 30 }
   ];
 
-  for (const [name, description, priceCents, stock] of seedProducts) {
-    await runQuery(
-      `INSERT INTO products (name, description, price_cents, stock)
-       SELECT $1, $2, $3, $4
-       WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = $1)`,
-      [name, description, priceCents, stock]
+  for (const product of seedProducts) {
+    await productsCollection.updateOne(
+      { id: product.id },
+      { $setOnInsert: product },
+      { upsert: true }
     );
   }
 
-  console.log("Database initialized with schema and sample products.");
+  console.log("MongoDB initialized with indexes and sample products.");
 }
 
 init()
@@ -50,5 +37,5 @@ init()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await pool.end();
+    await getClient().close();
   });
